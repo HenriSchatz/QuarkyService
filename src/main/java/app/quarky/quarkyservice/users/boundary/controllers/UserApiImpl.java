@@ -1,5 +1,6 @@
 package app.quarky.quarkyservice.users.boundary.controllers;
 
+import app.quarky.quarkyservice.shared.request.ReactiveRequestContextHolder;
 import app.quarky.quarkyservice.users.boundary.dtos.UserCreationRequestDto;
 import app.quarky.quarkyservice.users.boundary.dtos.UserResponseDto;
 import app.quarky.quarkyservice.users.boundary.mappers.UserDtoMapper;
@@ -8,12 +9,15 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.security.Principal;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequiredArgsConstructor
@@ -43,5 +47,19 @@ public class UserApiImpl implements UserApi {
         return principal
                 .flatMap(p -> userService.getUser(p.getName()))
                 .map(mapper::map);
+    }
+
+    @GetMapping("/request")
+    public Mono<Map<String, Object>> getRequest() {
+        return ReactiveRequestContextHolder.getRequest()
+                .map(r ->  {
+                    Map<String, Object> map = new ConcurrentHashMap<>();
+                    map.put("id", r.getId());
+                    map.put("method", r.getMethod().name());
+                    map.put("cookies", r.getCookies());
+                    map.put("remoteAddress", r.getRemoteAddress().toString());
+                    map.put("headers", r.getHeaders());
+                    return map;
+                });
     }
 }

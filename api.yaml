@@ -1,0 +1,336 @@
+openapi: 3.0.3
+info:
+  title: QuankiServiceEndpoints
+  description: QuankiServiceEndpoints
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080/'
+tags:
+  - name: user
+    description: Everything about Users
+  - name: stack
+    description: Everything about Stacks
+  - name: card
+    description: Everything about Cards
+  - name: category
+    description: Everything about Stack-Categories
+paths:
+  /users/register:
+    post:
+      tags:
+        - user
+      summary: Register a new User
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreationRequestDto'
+        required: true
+      responses:
+        '201':
+          description: Created User successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+        '422':
+          description: RequestDto malformed
+  /user:
+    get:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - user
+      summary: Get Name and Tag of current User
+      responses:
+        '200':
+          description: Got current User successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+
+  /stacks:
+    get:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - stack
+      summary: Get all available Stacks for current User
+      responses:
+        '200':
+          description: Got Stacks successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StackViewResponseDto'
+  /stacks/{stackId}:
+    parameters:
+      - name: stackId
+        in: path
+        description: ID of affected Stack
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - stack
+      summary: Get a Stack by Id with all its Cards sorted by state of knowledge
+      responses:
+        '200':
+          description: Got Stack successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StackResponseDto'
+        '404':
+          description: Stack not available
+    delete:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - stack
+      summary: Delete access to Stack for current User
+      responses:
+        '204':
+          description: Access deleted successfully
+  /stacks/{stackId}/copy:
+    parameters:
+      - name: stackId
+        in: path
+        description: ID of affected Stack
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - stack
+      summary: Copies the shared Stack of another User to your own Stacks
+      responses:
+        '201':
+          description: Copied Stack successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StackResponseDto'
+  /stacks/{stackId}/share:
+    put:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - stack
+      summary: Shares the Stack to the specified Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        '204':
+          description: Shared Stack successfully
+  /stacks/{stackId}/card:
+    parameters:
+      - name: stackId
+        in: path
+        description: ID of affected Stack
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - card
+      summary: xX_EXPER1MENT4L_Xx Returns Card of Stack with lowest Score of current User
+      responses:
+        '200':
+          description: Got Card successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponseDto'
+  /categories:
+    get:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - category
+      summary: Returns all defined Categories of current User
+      responses:
+        '200':
+          description: Got Categories successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StackCategoryResponseDto'
+    post:
+      security:
+        - basicAuth: [ ]
+      tags:
+        - category
+      summary: Create a new Category
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+      responses:
+        '201':
+          description: Created Category
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StackCategoryResponseDto'
+        '422':
+          description: Category malformed/exists already
+components:
+  schemas:
+    UserCreationRequestDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 40
+        name:
+          type: string
+          minLength: 3
+          maxLength: 20
+        password:
+          type: string
+          minLength: 5
+          maxLength: 50
+          # tbd
+    #        avatarLocation:
+    #          type: string
+    UserResponseDto:
+      type: object
+      properties:
+        name:
+          type: string
+        tag:
+          type: integer
+    UserViewResponseDto:
+      type: object
+      properties:
+        name:
+          type: string
+#        avatarLocation:
+#          type: string
+    StackViewResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        openCards:
+          type: integer
+        finishedCards:
+          type: integer
+        color:
+          $ref: '#/components/schemas/StackColor'
+        keyWords:
+          type: array
+          items:
+            $ref: '#/components/schemas/StackCategoryResponseDto'
+        creator:
+          $ref: '#/components/schemas/UserViewResponseDto'
+        sharedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserViewResponseDto'
+    StackColor:
+      type: string
+      enum:
+        - red
+        - green
+        - blue
+        - orange
+        - ...
+    StackCategoryResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          $ref: '#/components/schemas/CategoryColor'
+    CategoryColor:
+      type: string
+      enum:
+        - red
+        - green
+        - blue
+        - joeMama
+        - ...
+    StackResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        openCards:
+          type: integer
+        finishedCards:
+          type: integer
+        color:
+          $ref: '#/components/schemas/StackColor'
+        keyWords:
+          type: array
+          items:
+            $ref: '#/components/schemas/StackCategoryResponseDto'
+        creator:
+          $ref: '#/components/schemas/UserViewResponseDto'
+        sharedUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserViewResponseDto'
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/CardResponseDto'
+    CardResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        creationDate:
+          type: string
+          format: date-time
+        questionAnswerPairs:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionAnswerPair'
+    QuestionAnswerPair:
+      type: object
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic

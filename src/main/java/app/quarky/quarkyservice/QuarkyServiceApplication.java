@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class QuarkyServiceApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(QuarkyServiceApplication.class, args);
+        SpringApplication.run(QuarkyServiceApplication.class);
     }
-
 }
